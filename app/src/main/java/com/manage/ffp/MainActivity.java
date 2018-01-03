@@ -3,17 +3,25 @@ package com.manage.ffp;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
+
+    static TextView textview;
+    static Context context;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,7 +30,12 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        startActivity(new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"));
+        if(!isContainedInNotificationListeners(getApplicationContext())) {
+            startActivityForResult(new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"), 1);
+        }
+
+        textview = (TextView)findViewById(R.id.test);
+        context = MainActivity.this;
 
         //노티 생성
         final NotificationManager notificationManager= (NotificationManager)MainActivity.this.getSystemService(MainActivity.this.NOTIFICATION_SERVICE);
@@ -30,7 +43,6 @@ public class MainActivity extends AppCompatActivity {
 
         final Notification.Builder builder = new Notification.Builder(getApplicationContext());
         intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -41,11 +53,18 @@ public class MainActivity extends AppCompatActivity {
 
                 PendingIntent pendnoti = PendingIntent.getActivity(MainActivity.this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
                 builder.setSmallIcon(R.drawable.ic_launcher_background).setTicker("HIMAN").setWhen(System.currentTimeMillis())
-                        .setNumber(1).setContentTitle("test noti").setContentText("noti content")
+                        .setNumber(1).setContentTitle("KB스타알림").setContentText("01/03 11:55 114001-**-***394 주식회사웰스 체크카드출금 4,000 잔액103,538")
                         .setDefaults(Notification.DEFAULT_SOUND | Notification.DEFAULT_VIBRATE).setContentIntent(pendnoti).setAutoCancel(true).setOngoing(true);
                 notificationManager.notify(1, builder.build());
             }
         });
+    }
+
+    public static boolean isContainedInNotificationListeners(Context $context)
+    {
+        String enabledListeners = Settings.Secure.getString($context.getContentResolver(), "enabled_notification_listeners");
+        Log.d("isContext", enabledListeners);
+        return !TextUtils.isEmpty(enabledListeners) && enabledListeners.contains($context.getPackageName());
     }
 
     @Override
