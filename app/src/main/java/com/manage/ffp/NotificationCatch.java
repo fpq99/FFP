@@ -11,10 +11,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.lang.reflect.Field;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
 public class NotificationCatch extends NotificationListenerService {
+
+    private String[][] CopName = {{"주식회사 비케이알", "버거킹"}};
 
     @Override
     public void onNotificationPosted(StatusBarNotification sbn) {
@@ -25,13 +28,29 @@ public class NotificationCatch extends NotificationListenerService {
 
         final TextView tv = MainActivity.textview;
 
-        String str = new Date(sbn.getPostTime()).toString()+"\n";
+        Date time = new Date(sbn.getPostTime());
+        SimpleDateFormat format = new SimpleDateFormat("yyyy.MM.dd hh:mm");
+
+        String str = "";
 
         Bundle bundle =  sbn.getNotification().extras;
         for(String str1 : bundle.keySet()) {
             if(bundle.get(str1) != null) {
-                //Log.i("noti bundle", "Extra KEY: "+str1+" :: "+bundle.get(str1).toString());
-                str += "Extra KEY: "+str1+" :: "+bundle.get(str1).toString()+"\n";
+                if(str1.equals("android.text")) {
+                    String notitext = bundle.get(str1).toString();
+                    String[] tmp = notitext.split("[ ]");
+                    for(int i = 0; i < tmp.length; i++) {
+                        if(tmp[i].contains("카드")) {
+                            str += "결제장소: "+tmp[i-1];
+                            str += "\n결제시간: "+format.format(time);
+                            str += "\n결제금액: "+tmp[i+1];
+                            str += "  잔액: "+tmp[tmp.length-1];
+                            str += "\n알림전문: "+notitext+"\n";
+                            break;
+                        }
+                    }
+                }
+                //str += "Extra KEY: "+str1+" :: "+bundle.get(str1).toString()+"\n";
             }
         }
         final String text = str + "\n" + tv.getText().toString();
@@ -50,52 +69,5 @@ public class NotificationCatch extends NotificationListenerService {
     @Override
     public void onNotificationRemoved(StatusBarNotification sbn) {
         //super.onNotificationRemoved(sbn);
-    }
-
-
-    private String getText(StatusBarNotification event)
-    {
-        String result = null;
-        try
-        {
-            Notification notification = event.getNotification();
-            RemoteViews views = notification.contentView;
-            Class<?> secretClass = views.getClass();
-
-            Field outerFields[] = secretClass.getDeclaredFields();
-            for (int i = 0; i < outerFields.length; i++)
-            {
-                if (!outerFields[i].getName().equals("mActions"))
-                    continue;
-
-                outerFields[i].setAccessible(true);
-
-                @SuppressWarnings("unchecked")
-                ArrayList<Object> actions = (ArrayList<Object>) outerFields[i].get(views);
-                for (Object action : actions)
-                {
-                    Field innerFields[] = action.getClass().getDeclaredFields();
-
-                    Object value = null;
-                    Integer type = null;
-                    for (Field field : innerFields)
-                    {
-                        field.setAccessible(true);
-                        if (field.getName().equals("value"))
-                            value = field.get(action);
-                        else if (field.getName().equals("type"))
-                            type = field.getInt(action);
-                    }
-
-                    if (type != null && type == 10)
-                        result = value.toString();
-                }
-            }
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-        return result;
     }
 }

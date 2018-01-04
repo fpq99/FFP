@@ -18,6 +18,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 
+import com.manage.ffp.SQLite.DBHelper;
+
 public class MainActivity extends AppCompatActivity {
 
     static TextView textview;
@@ -58,12 +60,15 @@ public class MainActivity extends AppCompatActivity {
                 notificationManager.notify(1, builder.build());
             }
         });
+
+        DBHelper helper = new DBHelper(getApplicationContext(), "test.db", null, 1);
+        //helper.createTable("test");
+        //Log.d("LOGGGGG", helper.getResult("test"));
     }
 
     public static boolean isContainedInNotificationListeners(Context $context)
     {
         String enabledListeners = Settings.Secure.getString($context.getContentResolver(), "enabled_notification_listeners");
-        Log.d("isContext", enabledListeners);
         return !TextUtils.isEmpty(enabledListeners) && enabledListeners.contains($context.getPackageName());
     }
 
